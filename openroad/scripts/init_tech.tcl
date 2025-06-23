@@ -9,16 +9,16 @@
 
 # Initialize the PDK
 
-if {[file exists "../cockpit.log"]} {
-	utl::report "Init tech from ETHZ DZ cockpit"
-	set pdk_dir "../technology"
-	set pdk_cells_lib ${pdk_dir}/lib
-	set pdk_cells_lef ${pdk_dir}/lef
-	set pdk_sram_lib  ${pdk_dir}/lib
-	set pdk_sram_lef  ${pdk_dir}/lef
-	set pdk_io_lib    ${pdk_dir}/lib
-	set pdk_io_lef    ${pdk_dir}/lef
-} else {
+# if {[file exists "../cockpit.log"]} {
+# 	utl::report "Init tech from ETHZ DZ cockpit"
+# 	set pdk_dir "../technology"
+# 	set pdk_cells_lib ${pdk_dir}/lib
+# 	set pdk_cells_lef ${pdk_dir}/lef
+# 	set pdk_sram_lib  ${pdk_dir}/lib
+# 	set pdk_sram_lef  ${pdk_dir}/lef
+# 	set pdk_io_lib    ${pdk_dir}/lib
+# 	set pdk_io_lef    ${pdk_dir}/lef
+# } else {
 	utl::report "Init tech from Github PDK"
 	if {![info exists pdk_dir]} {
 		set pdk_dir "../ihp13/pdk"
@@ -29,7 +29,7 @@ if {[file exists "../cockpit.log"]} {
 	set pdk_sram_lef  ${pdk_dir}/ihp-sg13g2/libs.ref/sg13g2_sram/lef
 	set pdk_io_lib    ${pdk_dir}/ihp-sg13g2/libs.ref/sg13g2_io/lib
 	set pdk_io_lef    ${pdk_dir}/ihp-sg13g2/libs.ref/sg13g2_io/lef
-}
+#}
 
 set pdk_pad_lef   ../ihp13/bondpad/lef
 
