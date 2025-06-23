@@ -75,5 +75,14 @@ int main() {
         name_ptr[i] = names[i]; 
     }
 
+
+    //outputting name viap ut char
+    const char* p = (char*)0x20000000;
+    while (*p) {
+        putchar(*p++);
+    }
+    putchar('\n');
+    uart_write_flush();
+    
     return 1;
 }
