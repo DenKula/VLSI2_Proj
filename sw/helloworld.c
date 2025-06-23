@@ -64,5 +64,16 @@ int main() {
     sleep_ms(10);
     printf("Tock\n");
     uart_write_flush();
+
+    /*create a ptr looking at base mem adrs 
+    populate it with all the chars form names
+    */ 
+    volatile char* name_ptr = (char*)0x20000000;
+    const char names[] = "Deniz Kula, Ali Erbil\0";
+
+    for(int i = 0; i < sizeof(names); i++ ){
+        name_ptr[i] = names[i]; 
+    }
+
     return 1;
 }
