@@ -11,6 +11,21 @@
 #include "gpio.h"
 #include "util.h"
 
+#define OUR_NAME_ADDR ((volatile char*)0x20000000)
+
+void write_name() {
+    char *name = "Deniz Kula, Ali Erbil\n"; // null-terminated by compiler
+    char *dst = OUR_NAME_ADDR;
+    int i = 0;
+    while (name[i] != '\0') {
+        dst[i] = name[i];
+        i++;
+    }
+    dst[i] = '\0'; // make sure to null-terminate at the end
+}
+
+
+
 /// @brief Example integer square root
 /// @return integer square root of n
 uint32_t isqrt(uint32_t n) {
@@ -32,6 +47,9 @@ uint32_t isqrt(uint32_t n) {
 }
 
 int main() {
+
+    write_name();
+
     uart_init(); // setup the uart peripheral
 
     // simple printf support (only prints text and hex numbers)
