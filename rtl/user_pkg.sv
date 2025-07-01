@@ -21,7 +21,7 @@ package user_pkg;
   // User Subordinate Address maps ////
   /////////////////////////////////////
 
-  localparam int unsigned NumUserDomainSubordinates = 0;
+  localparam int unsigned NumUserDomainSubordinates = 1; //Den: changed to 1 as we have user_rom.sv 
 
   localparam bit [31:0] UserRomAddrOffset   = croc_pkg::UserBaseAddr; // 32'h2000_0000;
   localparam bit [31:0] UserRomAddrRange    = 32'h0000_1000;          // every subordinate has at least 4KB
@@ -36,5 +36,6 @@ package user_pkg;
 
   // Address rules given to address decoder
   localparam croc_pkg::addr_map_rule_t [NumDemuxSbrRules-1:0] user_addr_map = '0;
+ 
 
 endpackage

@@ -11,17 +11,15 @@
 #include "gpio.h"
 #include "util.h"
 
-#define OUR_NAME_ADDR ((volatile char*)0x20000000)
 
-void write_name() {
-    char *name = "Deniz Kula, Ali Erbil\n"; // null-terminated by compiler
-    char *dst = OUR_NAME_ADDR;
-    int i = 0;
-    while (name[i] != '\0') {
-        dst[i] = name[i];
-        i++;
-    }
-    dst[i] = '\0'; // make sure to null-terminate at the end
+//Den: putchar() 8 bit alip bunu char olarak UARTa koyuyuor  
+void read_name(){
+    
+    for (const char* name_addr = (const char*) USER_ROM_BASE_ADDR; *name_addr != 0; name_addr++){
+       putchar(*name_addr); 
+    } 
+    printf("\n");
+    uart_write_flush();
 }
 
 
@@ -48,7 +46,6 @@ uint32_t isqrt(uint32_t n) {
 
 int main() {
 
-    write_name();
 
     uart_init(); // setup the uart peripheral
 
@@ -82,5 +79,8 @@ int main() {
     sleep_ms(10);
     printf("Tock\n");
     uart_write_flush();
+
+    read_name();
+    
     return 1;
 }
