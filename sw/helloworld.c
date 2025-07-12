@@ -11,6 +11,19 @@
 #include "gpio.h"
 #include "util.h"
 
+
+//Den: putchar() 8 bit alip bunu char olarak UARTa koyuyuor  
+void read_name(){
+    
+    for (const char* name_addr = (const char*) USER_ROM_BASE_ADDR; *name_addr != 0; name_addr++){
+       putchar(*name_addr); 
+    } 
+    printf("\n");
+    uart_write_flush();
+}
+
+
+
 /// @brief Example integer square root
 /// @return integer square root of n
 uint32_t isqrt(uint32_t n) {
@@ -31,30 +44,14 @@ uint32_t isqrt(uint32_t n) {
     return res;
 }
 
-char receive_buff[16] = {0};
-
 int main() {
+
+
     uart_init(); // setup the uart peripheral
 
     // simple printf support (only prints text and hex numbers)
     printf("Hello World!\n");
     // wait until uart has finished sending
-    uart_write_flush();
-
-    // uart loopback
-    uart_loopback_enable();
-    printf("internal msg\n");
-    sleep_ms(1);
-    for(uint8_t idx = 0; idx<15; idx++) {
-        receive_buff[idx] = uart_read();
-        if(receive_buff[idx] == '\n') {
-            break;
-        }
-    }
-    uart_loopback_disable();
-
-    printf("Loopback received: ");
-    printf(receive_buff);
     uart_write_flush();
 
     // toggling some GPIOs
@@ -82,5 +79,11 @@ int main() {
     sleep_ms(10);
     printf("Tock\n");
     uart_write_flush();
+
+   
+    read_name();
+   
+
+    
     return 1;
 }
