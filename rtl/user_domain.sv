@@ -53,6 +53,8 @@ module user_domain import user_pkg::*; import croc_pkg::*; #(
   sbr_obi_req_t user_rom_obi_req;
   sbr_obi_rsp_t user_rom_obi_rsp;
 
+  sbr_obi_req_t user_bitrev_obi_req;
+  sbr_obi_rsp_t user_bitrev_obi_rsp;
   // Fanout into more readable signals
   assign user_error_obi_req              = all_user_sbr_obi_req[UserError];
   assign all_user_sbr_obi_rsp[UserError] = user_error_obi_rsp;
@@ -60,7 +62,8 @@ module user_domain import user_pkg::*; import croc_pkg::*; #(
   assign all_user_sbr_obi_rsp[UserRom] = user_rom_obi_rsp;
 
   //Den: assigning requests &resps for bitrev
-  assign 
+  assign user_bitrev_obi_req              = all_user_sbr_obi_req[UserBitrev];
+  assign all_user_sbr_obi_rsp[UserBitrev] = user_bitrev_obi_rsp;
 
   //-----------------------------------------------------------------------------------------------
   // Demultiplex to User Subordinates according to address map
@@ -133,22 +136,14 @@ module user_domain import user_pkg::*; import croc_pkg::*; #(
     .obi_rsp_o  ( user_error_obi_rsp )
   );
 
-  bitrev #(
-    .K          (BITREV_K),
-    .DW         (BITREV_DW)
-  ) i_bitrev (
-    .clk_i      (clk_i),
-    .rst_ni     (rst_ni),
-
-    //write side (we recive this from fft chip in natural order)
-    .valid_i    (fft_out_i.valid),
-    .data_i     (fft_out_i.data),
-    .ready_o    (br_ready_o)
-
-    //Read side (bit reversed order)
-    .valid_o    (br_out_o.valid),
-    .data_o     (br_out_o.data),
-    .ready_i    (br_out_ready_i)
+  bitrev_subordinate #(
+    .K  ( BITREV_K  ),   // e.g. 10 for 1024-point FFT
+    .DW ( BITREV_DW )    // data width (normally 32)
+  ) i_user_bitrev (
+    .clk_i,
+    .rst_ni,
+    .obi_req_i ( user_bitrev_obi_req ),
+    .obi_rsp_o ( user_bitrev_obi_rsp )
   );
 
 endmodule

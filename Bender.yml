@@ -46,7 +46,8 @@ sources:
       - rtl/croc_domain.sv
       - rtl/user_domain.sv
       - rtl/user_domain/user_rom.sv
-      - rtl/user_domain/fft_accel/bitrev.sv
+      - rtl/user_domain/bit_rev/bitrev.sv
+      - rtl/user_domain/bit_rev/bitrev_subordinate.sv
       # add your design files with modules here ^
       # Level 3
       - rtl/croc_soc.sv
