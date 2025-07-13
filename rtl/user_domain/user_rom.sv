@@ -1,95 +1,100 @@
-// Copyright 2023 ETH Zurich and University of Bologna.
-// Solderpad Hardware License, Version 0.51, see LICENSE for details.
-// SPDX-License-Identifier: SHL-0.51
+// ============================================================================
+// bitrev_subordinate.sv  –  Croc SBR-style OBI slave for the streaming
+//                           bit-reversal core
+// Register map (word-aligned, 32-bit):
+//   0x0  INPUT   [WO]  write  sample  -> feeds bitrev.valid_i / data_i
+//   0x4  OUTPUT  [RO]  read   sample  -> strobes bitrev.ready_i
+//   0x8  STATUS  [RO]  bit[0] = bitrev.valid_o
+// ============================================================================
 
-// gives us the `FF(...) macro making it easy to have properly defined flip-flops
-`include "common_cells/registers.svh"
+module bitrev_subordinate
+  import croc_pkg::*;
+  #(
+    parameter int unsigned K  = 10,
+    parameter int unsigned DW = 32
+  ) (
+    input  logic         clk_i,
+    input  logic         rst_ni,
 
-// simple ROM
-module user_rom #(
-  /// The OBI configuration for all ports.
-  parameter obi_pkg::obi_cfg_t           ObiCfg      = obi_pkg::ObiDefaultConfig,
-  /// The request struct.
-  parameter type                         obi_req_t   = logic,
-  /// The response struct.
-  parameter type                         obi_rsp_t   = logic
-) (
-  /// Clock
-  input  logic clk_i,
-  /// Active-low reset
-  input  logic rst_ni,
+    // SBR-OBI subordinate port
+    input  sbr_obi_req_t obi_req_i,
+    output sbr_obi_rsp_t obi_rsp_o
+  );
 
-  /// OBI request interface
-  input  obi_req_t obi_req_i,
-  /// OBI response interface
-  output obi_rsp_t obi_rsp_o
-);
+  //------------------------------ local ---------------------------------
+  typedef enum logic [2:0] { RegInput=3'b000, RegOutput=3'b001,
+                             RegStatus=3'b010 } reg_sel_e;
 
-  // Define some registers to hold the requests fields
-  logic req_d, req_q; // Request valid
-  logic we_d, we_q; // Write enable
-  logic [ObiCfg.AddrWidth-1:0] addr_d, addr_q; // Internal address of the word to read
-  logic [ObiCfg.IdWidth-1:0] id_d, id_q; // Id of the request, must be same for the response
+  //------------------------------ core ----------------------------------
+  logic          br_valid_i, br_ready_o;
+  logic          br_valid_o, br_ready_i;
+  logic [DW-1:0] br_data_i , br_data_o;
 
-  // Signals used to create the response
-  logic [ObiCfg.DataWidth-1:0] rsp_data; // Data field of the obi response
-  logic rsp_err; // Error field of the obi response
+  bitrev #(.K(K), .DW(DW)) i_bitrev (
+    .clk_i, .rst_ni,
+    .valid_i (br_valid_i), .data_i (br_data_i), .ready_o (br_ready_o),
+    .valid_o (br_valid_o), .data_o (br_data_o), .ready_i (br_ready_i)
+  );
 
-  // Wire the registers holding the request
-  assign req_d = obi_req_i.req;
-  assign id_d = obi_req_i.a.aid;
-  assign we_d = obi_req_i.a.we;
-  assign addr_d = obi_req_i.a.addr;
+  //------------------------------ WRITE ---------------------------------
+  assign br_data_i  = obi_req_i.wdata;
+  assign br_valid_i =
+         obi_req_i.req                      &&   // request present
+         obi_req_i.a.we                     &&   // write access
+         (obi_req_i.a.addr[2+:3] == RegInput);
 
-  always_ff @(posedge (clk_i) or negedge (rst_ni)) begin
+  //------------------------------ READ state ----------------------------
+  logic     rd_pending_q;
+  reg_sel_e rd_reg_q;
+  logic [ObiCfg.IdWidth-1:0] rd_id_q;
+
+  always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
-      req_q <= '0;
-      id_q <= '0;
-      we_q <= '0;
-      addr_q <= '0;
-
-    end else begin//Den: upadte ff sates
-      req_q <= req_d;
-      id_q <= id_d;
-      we_q <= we_d;
-      addr_q <= addr_d;
-    end
-  end
-
-  // Assign the response data
-  // The ROM contains (up to) 32 ASCII chars holding in the names of the project authors
-  logic [1:0] word_addr;
-  always_comb begin
-    rsp_data = '0;
-    rsp_err  = '0;
-    word_addr = addr_q[3:2];
-
-    if(req_q) begin
-      if(~we_q) begin
-        case(word_addr)
-         2'h0: rsp_data = 32'h696E6544; // "Deni"
-         2'h1: rsp_data = 32'h2025207A; // "z % "
-         2'h2: rsp_data = 32'h00696C41; // "Ali\0"
-         2'h3: rsp_data = 32'h00000000; // zero padding or unused
-          default: rsp_data = 32'h0;
-        endcase
-      end else begin
-        rsp_err = '1;
+      rd_pending_q <= 1'b0;
+      rd_reg_q     <= RegInput;
+      rd_id_q      <= '0;
+    end else begin
+      // Latch new read request
+      if (obi_req_i.req && !obi_req_i.a.we && !rd_pending_q) begin
+        rd_pending_q <= 1'b1;
+        rd_reg_q     <= reg_sel_e'(obi_req_i.a.addr[2+:3]);
+        rd_id_q      <= obi_req_i.a.aid;
       end
+      // Response delivered => clear
+      if (obi_rsp_o.rvalid)
+        rd_pending_q <= 1'b0;
     end
   end
 
-  // Wire the response
-  // A channel
-  assign obi_rsp_o.gnt = obi_req_i.req;
-  // R channel:
-  assign obi_rsp_o.rvalid = req_q;
-  assign obi_rsp_o.r.rdata = rsp_data;
-  assign obi_rsp_o.r.rid = id_q;
-  assign obi_rsp_o.r.err = rsp_err;
-  assign obi_rsp_o.r.r_optional = '0;
+  //------------------------------ RESPONSE ------------------------------
+  always_comb begin
+    // Root channel defaults
+    obi_rsp_o         = '0;
+    obi_rsp_o.gnt     = 1'b1;          // always grant
+    obi_rsp_o.rvalid  = 1'b0;
+
+    // R-channel defaults
+    obi_rsp_o.r.rdata       = '0;
+    obi_rsp_o.r.rid         = rd_id_q;
+    obi_rsp_o.r.err         = 1'b0;
+    obi_rsp_o.r.r_optional  = '0;
+
+    br_ready_i              = 1'b0;
+
+    if (rd_pending_q) begin
+      obi_rsp_o.rvalid = 1'b1;
+
+      unique case (rd_reg_q)
+        RegOutput: begin
+          obi_rsp_o.r.rdata = br_data_o;
+          br_ready_i        = 1'b1;   // pop exactly one word
+        end
+        RegStatus: begin
+          obi_rsp_o.r.rdata = {{(DW-1){1'b0}}, br_valid_o};
+        end
+        default: ;                    // undefined offsets => 0
+      endcase
+    end
+  end
 
 endmodule
-
-
-
