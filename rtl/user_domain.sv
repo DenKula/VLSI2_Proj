@@ -53,14 +53,19 @@ module user_domain import user_pkg::*; import croc_pkg::*; #(
   sbr_obi_req_t user_rom_obi_req;
   sbr_obi_rsp_t user_rom_obi_rsp;
 
+  sbr_obi_req_t user_fft_obi_req;
+  sbr_obi_rsp_t user_fft_obi_rsp;
+
+
   // Fanout into more readable signals
   assign user_error_obi_req              = all_user_sbr_obi_req[UserError];
   assign all_user_sbr_obi_rsp[UserError] = user_error_obi_rsp;
+
   assign user_rom_obi_req              = all_user_sbr_obi_req[UserRom];
   assign all_user_sbr_obi_rsp[UserRom] = user_rom_obi_rsp;
 
-  //Den: assigning requests &resps for bitrev
-  assign 
+  assign user_fft_obi_req              = all_user_sbr_obi_req[UserFft];
+  assign all_user_sbr_obi_rsp[UserFft] = user_fft_obi_rsp;
 
   //-----------------------------------------------------------------------------------------------
   // Demultiplex to User Subordinates according to address map
@@ -131,6 +136,26 @@ module user_domain import user_pkg::*; import croc_pkg::*; #(
     .testmode_i ( testmode_i      ),
     .obi_req_i  ( user_error_obi_req ),
     .obi_rsp_o  ( user_error_obi_rsp )
+  );
+
+    // ─────────── FFT subordinate ───────────
+  fft_adapter #(
+    .ObiCfg     ( SbrObiCfg ),
+    .DATA_W     ( 16 ),   // 16‑bit Re/Im
+    .LOGN       ( 10 ),   // 1 k‑point FFT
+    .FIFO_DEPTH ( 32 )
+  ) i_user_fft (
+    .clk_i      ( clk_i ),
+    .rst_ni     ( rst_ni ),
+    .testmode_i ( testmode_i ),
+
+    .obi_req_i  ( user_fft_obi_req ),
+    .obi_rsp_o  ( user_fft_obi_rsp ),
+
+    // stream export not used for now (for futurextentions)
+    .fft_out_valid_o ( /* open */ ),
+    .fft_out_data_o  ( /* open */ ),
+    .fft_out_ready_i ( 1'b1 )
   );
   
 endmodule

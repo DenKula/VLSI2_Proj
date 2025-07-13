@@ -21,27 +21,33 @@ package user_pkg;
   // User Subordinate Address maps ////
   /////////////////////////////////////
 
-  localparam int unsigned NumUserDomainSubordinates = 1;  //Den: I have changed this to 1, as we have added another subordinate (ROM) to the user domain
+  localparam int unsigned NumUserDomainSubordinates = 2;  //Den: I have changed this to 2, as we have added another subordinate (ROM & fft) to the user domain
 
   localparam bit [31:0] UserRomAddrOffset   = croc_pkg::UserBaseAddr; // 32'h2000_0000;
   localparam bit [31:0] UserRomAddrRange    = 32'h0000_1000;          // every subordinate has at least 4KB
 
+  // **NEW** FFT ─ next 4 KiB at 0x2000_1000
+  localparam bit [31:0] UserFftAddrOffset = UserRomAddrOffset + UserRomAddrRange; // 0x2000_1000
+  localparam bit [31:0] UserFftAddrRange  = 32'h0000_1000;
+  
   localparam int unsigned NumDemuxSbrRules  = NumUserDomainSubordinates; // number of address rules in the decoder
   localparam int unsigned NumDemuxSbr       = NumDemuxSbrRules + 1; // additional OBI error, used for signal arrays
 
   // Enum for bus indices
   typedef enum int {
     UserError = 0,
-    UserRom = 1
+    UserRom = 1,
+    UserFft = 2
   } user_demux_outputs_e;
 
-  // Address rules given to address decoder
+  // Two address-decode rules (ROM, FFT) – **order doesn’t matter**
   localparam croc_pkg::addr_map_rule_t [NumDemuxSbrRules-1:0] user_addr_map = '{
-    '{ //ROM
-      start_addr:   UserRomAddrOffset,
-      end_addr:     UserRomAddrOffset + UserRomAddrRange - 1,
-      idx:          UserRom
-    }
+    '{ start_addr: UserRomAddrOffset,
+       end_addr : UserRomAddrOffset + UserRomAddrRange - 1,
+       idx      : UserRom },
+    '{ start_addr: UserFftAddrOffset,
+       end_addr : UserFftAddrOffset + UserFftAddrRange - 1,
+       idx      : UserFft }
   };
 
 endpackage
