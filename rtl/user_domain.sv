@@ -132,23 +132,5 @@ module user_domain import user_pkg::*; import croc_pkg::*; #(
     .obi_req_i  ( user_error_obi_req ),
     .obi_rsp_o  ( user_error_obi_rsp )
   );
-
-  bitrev #(
-    .K          (BITREV_K),
-    .DW         (BITREV_DW)
-  ) i_bitrev (
-    .clk_i      (clk_i),
-    .rst_ni     (rst_ni),
-
-    //write side (we recive this from fft chip in natural order)
-    .valid_i    (fft_out_i.valid),
-    .data_i     (fft_out_i.data),
-    .ready_o    (br_ready_o)
-
-    //Read side (bit reversed order)
-    .valid_o    (br_out_o.valid),
-    .data_o     (br_out_o.data),
-    .ready_i    (br_out_ready_i)
-  );
-
+  
 endmodule
