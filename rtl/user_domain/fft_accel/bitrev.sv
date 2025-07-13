@@ -8,7 +8,6 @@
  * Write side handshake : valid_i / ready_o
  * Read  side handshake : valid_o / ready_i
  *
- * Public domain / CC0.
  */
 module bitrev #(
   parameter int K  = 10,   // log2(N) – e.g. 10 ⇒ 1024‑point FFT
@@ -45,7 +44,7 @@ module bitrev #(
   // ============================================================== 
   //  WRITE PATH  – always accept one word per clock                 |
   // ==============================================================
-  always_ff @(posedge clk_i or negedge rst_ni) begin
+  always_ff @(posedge clk_i or negedge rst_ni) begin : wr_path
     if (!rst_ni) begin
       wr_cnt      <= '0;
       bank_sel_wr <= 1'b0;
@@ -56,9 +55,13 @@ module bitrev #(
         wr_cnt      <= '0;
         bank_sel_wr <= ~bank_sel_wr;     // switch banks after N samples
       end
+    end else begin
+      // Default: hold current state (some linters require explicit branch)
+      wr_cnt      <= wr_cnt;
+      bank_sel_wr <= bank_sel_wr;
     end
   end
-  // Consumer is always ready
+  // Producer is always accepted
   assign ready_o = 1'b1;
 
   // ============================================================== 
@@ -75,19 +78,24 @@ module bitrev #(
     end
   endfunction
 
-  // Combinational read address and data
-  always_comb begin
+  // Combinational read address and data with default assignment
+  always_comb begin : rd_path_comb
+    // default assignments (avoid accidental latches)
+    data_d = '0;
+
+    // Compute bit‑reversed address and fetch word
     data_d = sram[{bank_sel_rd, bit_reverse(rd_cnt)}];
   end
 
-  // Sequential part
-  always_ff @(posedge clk_i or negedge rst_ni) begin
+  // Sequential part with explicit default (hold‑state) branch
+  always_ff @(posedge clk_i or negedge rst_ni) begin : rd_path_seq
     if (!rst_ni) begin
       rd_cnt      <= '0;
       bank_sel_rd <= 1'b1;   // opposite bank of writer at reset
       data_q      <= '0;
       valid_o     <= 1'b0;
     end else if (ready_i || ~valid_o) begin
+      // Normal advancing state
       data_q  <= data_d;
       valid_o <= 1'b1;
       rd_cnt  <= rd_cnt + 1'b1;
@@ -96,6 +104,12 @@ module bitrev #(
         rd_cnt      <= '0;
         bank_sel_rd <= ~bank_sel_rd;     // switch when bank fully read
       end
+    end else begin
+      // Default: hold current state
+      data_q      <= data_q;
+      valid_o     <= valid_o;
+      rd_cnt      <= rd_cnt;
+      bank_sel_rd <= bank_sel_rd;
     end
   end
 

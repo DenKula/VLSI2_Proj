@@ -21,7 +21,7 @@ package user_pkg;
   // User Subordinate Address maps ////
   /////////////////////////////////////
 
-  localparam int unsigned NumUserDomainSubordinates = 1;  // K: I have changed this to 1, as we have added another subordinate (ROM) to the user domain
+  localparam int unsigned NumUserDomainSubordinates = 1;  //Den: I have changed this to 1, as we have added another subordinate (ROM) to the user domain
 
   localparam bit [31:0] UserRomAddrOffset   = croc_pkg::UserBaseAddr; // 32'h2000_0000;
   localparam bit [31:0] UserRomAddrRange    = 32'h0000_1000;          // every subordinate has at least 4KB
