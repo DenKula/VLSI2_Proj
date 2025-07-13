@@ -59,7 +59,8 @@ module user_domain import user_pkg::*; import croc_pkg::*; #(
   assign user_rom_obi_req              = all_user_sbr_obi_req[UserRom];
   assign all_user_sbr_obi_rsp[UserRom] = user_rom_obi_rsp;
 
-
+  //Den: assigning requests &resps for bitrev
+  assign 
 
   //-----------------------------------------------------------------------------------------------
   // Demultiplex to User Subordinates according to address map
@@ -131,5 +132,17 @@ module user_domain import user_pkg::*; import croc_pkg::*; #(
     .obi_req_i  ( user_error_obi_req ),
     .obi_rsp_o  ( user_error_obi_rsp )
   );
+
+  bitrev #(
+    .K          (BITREV_K),
+    .DW         (BITREV_DW)
+  ) i_bitrev (
+    .clk_i       (clk_i),
+    .rst_ni      (rst_ni),
+
+    //write side 
+    
+
+  )
 
 endmodule
