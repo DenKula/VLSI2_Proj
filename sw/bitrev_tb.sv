@@ -3,6 +3,8 @@
 // bitrev_tb – single‑frame smoke test for the bit‑reversal core
 //  * updated to align expected data with DUT's one‑cycle latency
 // ====================================================================
+// we are using each samples memory index as the data to invers
+
 
 module bitrev_tb;
 
