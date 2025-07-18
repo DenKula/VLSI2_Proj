@@ -99,7 +99,7 @@ module bitrev_tb;
 
     // ------------------------------------------------------------
     // 3) Real test – send natural‑order frame, expect bit‑reversed
-    integer err_cnt;
+    define err_cnt;
     push_frame();
     pull_and_check_frame(.errors(err_cnt));
 
