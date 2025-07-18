@@ -106,5 +106,5 @@ module bitrev_tb;
     #20;
     $finish;
   end
-
+//tb works
 endmodule
