@@ -51,7 +51,7 @@ module bitrev #(
     end else if (valid_i && ready_o) begin
       sram[{bank_sel_wr, wr_cnt}] <= data_i;
       wr_cnt <= wr_cnt + 1'b1;
-      if (wr_cnt == (N-1)) begin
+      if (wr_cnt == K'((1<<K)-1)) begin
         wr_cnt      <= '0;
         bank_sel_wr <= ~bank_sel_wr;     // switch banks after N samples
       end
@@ -85,6 +85,10 @@ module bitrev #(
 
     // Compute bit‑reversed address and fetch word
     data_d = sram[{bank_sel_rd, bit_reverse(rd_cnt)}];
+
+    logic [K-1:0] rev_addr;
+    rev_addr = bit_reverse(rd_cnt);
+    data_d = sram[{bank_sel_rd, rev_addr}];
   end
 
   // Sequential part with explicit default (hold‑state) branch
@@ -100,7 +104,7 @@ module bitrev #(
       valid_o <= 1'b1;
       rd_cnt  <= rd_cnt + 1'b1;
 
-      if (rd_cnt == (N-1)) begin
+      if (rd_cnt == K'((1<<K)-1)) begin
         rd_cnt      <= '0;
         bank_sel_rd <= ~bank_sel_rd;     // switch when bank fully read
       end

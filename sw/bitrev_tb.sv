@@ -69,20 +69,20 @@ module bitrev_tb;
     // 2) Send one natural‑order frame
     for (int unsigned i = 0; i < N; i++) begin
       @(posedge clk_i);
-      valid_i <= 1'b1;
-      data_i  <= i;
+      valid_i = 1'b1;
+      data_i  = i;
       wait (ready_o);
     end
     @(posedge clk_i);
-    valid_i <= 1'b0;        // stop writing
+    valid_i = 1'b0;        // stop writing
 
     // ------------------------------------------------------------
     // 3) Read frame back and check
     for (int unsigned i = 0; i < N; i++) begin
-      ready_i <= 1'b1;            // request data
+      ready_i = 1'b1;            // request data
       wait (valid_o);             // wait until word valid
       @(posedge clk_i);           // sample on clock edge
-      ready_i <= 1'b0;
+      ready_i = 1'b0;
       if (data_o[K-1:0] !== reverse_bits_k(i[K-1:0])) begin
         $display("Mismatch @%0d : got %0d, exp %0d",
            i, data_o, reverse_bits_k(i[K-1:0]));
