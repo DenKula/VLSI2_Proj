@@ -2,8 +2,8 @@
  * bitrev.sv – parameterisable bit‑reversal address generator + ping‑pong SRAM
  * ---------------------------------------------------------------------------
  * Interface conventions
- *   *_i  : input  | *_o : output | *_n : active‑low
- *   *_d  : combinational data    | *_q : registered data
+ *   *_i : input   | *_o : output | *_n : active‑low
+ *   *_d : comb.   | *_q : registered
  *
  * Write‑side handshake : valid_i / ready_o  (producer never stalled)
  * Read‑side  handshake : valid_o / ready_i
@@ -50,16 +50,23 @@ module bitrev #(
   // =====================================================================
   //  WRITE PATH – always ready (no back‑pressure towards producer)
   // =====================================================================
+  logic [K-1:0] wr_cnt_next;
+
   always_ff @(posedge clk_i or negedge rst_ni) begin : wr_path
     if (!rst_ni) begin
       wr_cnt      <= '0;
       bank_sel_wr <= 1'b0;             // start filling bank‑A
     end else if (valid_i && ready_o) begin
+      // Store incoming sample
       sram[{bank_sel_wr, wr_cnt}] <= data_i;
-      wr_cnt <= wr_cnt + 1'b1;
-      if (wr_cnt == K'((1<<K)-1)) begin        // last address in bank
-        wr_cnt      <= '0;
-        bank_sel_wr <= ~bank_sel_wr;           // switch banks
+
+      // Increment address counter
+      wr_cnt_next = wr_cnt + 1'b1;
+      wr_cnt      <= wr_cnt_next;
+
+      // Toggle bank *after* final address (when counter wraps to 0)
+      if (wr_cnt_next == '0) begin
+        bank_sel_wr <= ~bank_sel_wr;
       end
     end
   end
@@ -81,22 +88,22 @@ module bitrev #(
   // 2. Combinational read address & data ---------------------------------
   logic [DW-1:0] data_d, data_q;
   logic [K-1:0]  rev_addr;
-  assign rev_addr = bit_reverse(rd_cnt);       // use *current* counter
+  assign rev_addr = bit_reverse(rd_cnt);       // current address
   assign data_d   = sram[{bank_sel_rd, rev_addr}];
 
   // 3. Sequential pipeline & control -------------------------------------
   always_ff @(posedge clk_i or negedge rst_ni) begin : rd_path_seq
     if (!rst_ni) begin
       rd_cnt      <= '0;
-      bank_sel_rd <= 1'b0;                     // **same** bank as writer
+      bank_sel_rd <= 1'b0;                     // same bank as writer
       data_q      <= '0;
       valid_o     <= 1'b0;
     end else if (ready_i || ~valid_o) begin
-      // Latch data for current address
+      // Present fetched data
       data_q  <= data_d;
       valid_o <= 1'b1;
 
-      // Address generation for *next* cycle
+      // Advance read address and handle bank switch
       if (rd_cnt == K'((1<<K)-1)) begin        // just read last address
         rd_cnt      <= '0;
         bank_sel_rd <= ~bank_sel_rd;           // switch banks
@@ -107,6 +114,6 @@ module bitrev #(
   end
 
   // 4. Output mapping -----------------------------------------------------
-  assign data_o = data_q;                      // registered data
+  assign data_o = data_q;
 
 endmodule
