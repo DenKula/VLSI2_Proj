@@ -79,16 +79,22 @@ module bitrev_tb;
     // ------------------------------------------------------------
     // 3) Read frame back and check
     for (int unsigned i = 0; i < N; i++) begin
-      ready_i <= 1'b1;            // request data
-      wait (valid_o);             // wait until word valid
-      @(posedge clk_i);           // sample on clock edge
+      ready_i <= 1'b1;
+      wait (valid_o);
+     @(posedge clk_i);
       ready_i <= 1'b0;
-      if (data_o !== reverse_bits_k(i)) begin
+
+     // ➊ build a 32‑bit expected word
+     logic [DW-1:0] exp_word;
+      exp_word = {{(DW-K){1'b0}}, reverse_bits_k(i[K-1:0])};
+
+     // ➋ compare and report
+      if (data_o !== exp_word) begin
         $display("Mismatch @%0d : got %0d, exp %0d",
-                 i, data_o, reverse_bits_k(i));
-        err_cnt++;
-      end
-    end
+             i, data_o, exp_word);
+    err_cnt++;
+  end
+end
 
     // ------------------------------------------------------------
     // 4) Report result and finish
