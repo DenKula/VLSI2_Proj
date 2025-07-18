@@ -62,7 +62,9 @@ module bitrev #(
     end
   end
   // Producer is always accepted
+  /* verilator lint_off WAITCONST */
   assign ready_o = 1'b1;
+  /*verilator lint_on WAITCONST */
 
   // ============================================================== 
   //  READ PATH – bit‑reversal with data_d / data_q separation       |
@@ -83,8 +85,11 @@ module bitrev #(
     // default assignments (avoid accidental latches)
     data_d = '0;
 
+    logic [K-1:0] rev_addr; 
+    rev_addr = bit_reverse(rd_cnt);
+
     // Compute bit‑reversed address and fetch word
-    data_d = sram[{bank_sel_rd, bit_reverse(rd_cnt)}];
+    data_d = sram[{bank_sel_rd, rev_addr}];
   end
 
   // Sequential part with explicit default (hold‑state) branch
