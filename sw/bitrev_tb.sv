@@ -1,9 +1,9 @@
 `timescale 1ns/1ps
 // ====================================================================
-// tb_bitrev – behavioural smoke test for the bit‑reversal core
+// bitrev_tb – behavioural smoke test for the bit‑reversal core
 // ====================================================================
 
-module tb_bitrev;
+module bitrev_tb;
 
   // ------------------------------------------------------------------
   // Parameters
@@ -83,8 +83,8 @@ module tb_bitrev;
   // Test sequence
   initial begin
     // VCD dump
-    $dumpfile("tb_bitrev.vcd");
-    $dumpvars(0, tb_bitrev);
+    $dumpfile("bitrev_tb.vcd");
+    $dumpvars(0, bitrev_tb);
 
     // ------------------------------------------------------------
     // 1) Reset
