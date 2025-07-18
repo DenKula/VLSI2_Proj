@@ -92,10 +92,10 @@ module bitrev_tb;
     repeat (4) @(posedge clk_i);
     rst_ni = 1;
 
-    // ------------------------------------------------------------
     // 2) Prime writer/reader bank pointers (send one dummy frame)
+    int unsigned dummy_errors;        
     push_frame();
-    pull_and_check_frame(.errors(/* unused */));
+    pull_and_check_frame(.errors(dummy_errors));  // <‑‑ pass a real var
 
     // ------------------------------------------------------------
     // 3) Real test – send natural‑order frame, expect bit‑reversed
