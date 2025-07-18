@@ -78,14 +78,15 @@ module bitrev_tb;
 
     // ------------------------------------------------------------
     // 3) Read frame back and check
+    // ➊ build a 32‑bit expected word
+     logic [DW-1:0] exp_word;
     for (int unsigned i = 0; i < N; i++) begin
       ready_i <= 1'b1;
       wait (valid_o);
      @(posedge clk_i);
       ready_i <= 1'b0;
 
-     // ➊ build a 32‑bit expected word
-     logic [DW-1:0] exp_word;
+
       exp_word = {{(DW-K){1'b0}}, reverse_bits_k(i[K-1:0])};
 
      // ➋ compare and report
