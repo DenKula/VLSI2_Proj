@@ -5,17 +5,17 @@
  *   *_i : input  | *_o : output | *_n : active‑low
  *   *_d : combinational data    | *_q : registered data
  *
- * Write side handshake : valid_i / ready_o
- * Read  side handshake : valid_o / ready_i
+ * Write‑side handshake : valid_i / ready_o
+ * Read‑side  handshake : valid_o / ready_i
  *
- * to run the test bench:
+ * Build example:
  *   verilator -Wall -sv --trace --binary --top-module bitrev_tb \
  *             sw/bitrev_tb.sv rtl/user_domain/bit_rev/bitrev.sv
  */
 
 module bitrev #(
   parameter int K  = 10,   // log2(N) – e.g. 10 ⇒ 1024‑point FFT
-  parameter int DW = 32    // data width
+  parameter int DW = 32    // data width per sample
 )(
   // Clock / reset
   input  logic                 clk_i,
@@ -32,21 +32,22 @@ module bitrev #(
   input  logic                 ready_i
 );
 
-  localparam int N = 1 << K;
+  localparam int N = 1 << K;            // samples per ping‑pong bank
 
   // ------------------------------------------------------------------
-  // Dual‑port SRAM (behavioural placeholder – swap for tc_sram macros)
+  // Dual‑port SRAM (behavioural placeholder – replace with real macros)
   // ------------------------------------------------------------------
-  logic [DW-1:0] sram [0:2*N-1];
+  logic [DW-1:0] sram [0:2*N-1];        // 2 banks × N locations
 
-  // Ping‑pong selects : 0 ⇒ bank A , 1 ⇒ bank B.
-  logic bank_sel_wr, bank_sel_rd;
+  // Bank selectors : 0 ⇒ bank‑A , 1 ⇒ bank‑B.
+  logic bank_sel_wr, bank_sel_rd, bank_sel_rd_next;
 
-  // Counters
-  logic [K-1:0] wr_cnt, rd_cnt;
+  // Address counters
+  logic [K-1:0] wr_cnt;
+  logic [K-1:0] rd_cnt, rd_cnt_next;
 
   // ==============================================================
-  //  WRITE PATH  – always accept one word per clock
+  //  WRITE PATH  – always accepts one sample per clock
   // ==============================================================
   always_ff @(posedge clk_i or negedge rst_ni) begin : wr_path
     if (!rst_ni) begin
@@ -57,55 +58,62 @@ module bitrev #(
       wr_cnt <= wr_cnt + 1'b1;
       if (wr_cnt == K'((1<<K)-1)) begin
         wr_cnt      <= '0;
-        bank_sel_wr <= ~bank_sel_wr;     // switch banks after N samples
+        bank_sel_wr <= ~bank_sel_wr;   // switch after writing last addr
       end
     end
   end
 
-  // Producer is always accepted
   /* verilator lint_off WAITCONST */
-  assign ready_o = 1'b1;
-  /* verilator lint_on WAITCONST */
+  assign ready_o = 1'b1;                // producer never throttled
+  /* verilator lint_on  WAITCONST */
 
   // ==============================================================
-  //  READ PATH – bit‑reversal with data_d / data_q separation
+  //  READ PATH – bit‑reverse addressing with 1‑cycle latency
   // ==============================================================
-  // Combinational next‑data
+  // Pipeline registers
   logic [DW-1:0] data_d, data_q;
-  assign data_o = data_q;   // expose registered data to the outside
+  assign data_o = data_q;
 
-  // Bit‑reverse function (combinational)
+  // -------- Bit‑reverse helper ----------------------------------
   function automatic [K-1:0] bit_reverse (input logic [K-1:0] x);
-    for (int i = 0; i < K; i++) begin
+    for (int i = 0; i < K; ++i) begin
       bit_reverse[i] = x[K-1-i];
     end
   endfunction
 
-  // Combinational read address and data
+  // -------- Combinational next‑state + SRAM read ----------------
   always_comb begin : rd_path_comb
-    logic [K-1:0] rev_addr;
-    data_d = '0;                 // default to squelch latches
+    // Default next‑state
+    rd_cnt_next       = rd_cnt + 1'b1;
+    bank_sel_rd_next  = bank_sel_rd;
+    data_d            = '0;
 
-    rev_addr = bit_reverse(rd_cnt);
-    data_d   = sram[{bank_sel_rd, rev_addr}];
+    // Wrap and bank‑toggle
+    if (rd_cnt == K'((1<<K)-1)) begin
+      rd_cnt_next      = '0;
+      bank_sel_rd_next = ~bank_sel_rd;
+    end
+
+    // Compute bit‑reversed address for *next* counter value
+    logic [K-1:0] rev_addr;
+    rev_addr = bit_reverse(rd_cnt_next);
+
+    // Pull word for the next cycle
+    data_d = sram[{bank_sel_rd_next, rev_addr}];
   end
 
-  // Sequential part
+  // -------- Sequential register/update --------------------------
   always_ff @(posedge clk_i or negedge rst_ni) begin : rd_path_seq
     if (!rst_ni) begin
       rd_cnt      <= '0;
-      bank_sel_rd <= 1'b0;   // **same** bank as writer at reset
+      bank_sel_rd <= 1'b0;             // start on same bank as writer
       data_q      <= '0;
       valid_o     <= 1'b0;
     end else if (ready_i || ~valid_o) begin
-      data_q  <= data_d;
-      valid_o <= 1'b1;
-      rd_cnt  <= rd_cnt + 1'b1;
-
-      if (rd_cnt == K'((1<<K)-1)) begin
-        rd_cnt      <= '0;
-        bank_sel_rd <= ~bank_sel_rd;   // switch after full bank read
-      end
+      rd_cnt      <= rd_cnt_next;
+      bank_sel_rd <= bank_sel_rd_next;
+      data_q      <= data_d;
+      valid_o     <= 1'b1;
     end
   end
 
