@@ -84,6 +84,7 @@ module bitrev #(
   // -------- Combinational next‑state + SRAM read ----------------
   always_comb begin : rd_path_comb
     // Default next‑state
+    logic [K-1:0] rev_addr;
     rd_cnt_next       = rd_cnt + 1'b1;
     bank_sel_rd_next  = bank_sel_rd;
     data_d            = '0;
@@ -95,7 +96,7 @@ module bitrev #(
     end
 
     // Compute bit‑reversed address for *next* counter value
-    logic [K-1:0] rev_addr;
+    
     rev_addr = bit_reverse(rd_cnt_next);
 
     // Pull word for the next cycle
