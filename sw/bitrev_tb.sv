@@ -1,9 +1,9 @@
 `timescale 1ns/1ps
 // ====================================================================
-// tb_bitrev_simple – single‑frame smoke test for the bit‑reversal core
+// bitrev_tb – single‑frame smoke test for the bit‑reversal core
 // ====================================================================
 
-module tb_bitrev_simple;
+module bitrev_tb;
 
   // ------------------------------------------------------------------
   // Parameters (must match DUT generics)
@@ -56,8 +56,8 @@ module tb_bitrev_simple;
   integer err_cnt = 0;     // signed 32‑bit – tool‑friendly
 
   initial begin
-    $dumpfile("tb_bitrev_simple.vcd");
-    $dumpvars(0, tb_bitrev_simple);
+    $dumpfile("bitrev_tb.vcd");
+    $dumpvars(0, bitrev_tb);
 
     // ------------------------------------------------------------
     // 1) Reset
