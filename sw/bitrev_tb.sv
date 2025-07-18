@@ -99,9 +99,9 @@ module bitrev_tb;
 
     // ------------------------------------------------------------
     // 3) Real test – send natural‑order frame, expect bit‑reversed
-    int unsigned err_cnt;
+    int err_cnt;
     push_frame();
-    pull_and_check_frame(err_cnt);
+    pull_and_check_frame(.errors(err_cnt));
 
     if (err_cnt == 0)
       $display("Bit‑reversal test PASSED for %0d‑point frame", N);
