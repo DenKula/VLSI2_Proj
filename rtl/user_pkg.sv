@@ -47,7 +47,8 @@ package user_pkg;
     '{ start_addr: UserRomAddrOffset,
        end_addr : UserRomAddrOffset + UserRomAddrRange - 1,
        idx      : UserRom },
-    '{ start_addr: UserBitrevAddrOffset,
+    '{//Bitrev
+       start_addr: UserBitrevAddrOffset,
        end_addr : UserBitrevAddrOffset + UserBitrevAddrRange - 1,
        idx      : UserBitrev }
   };
