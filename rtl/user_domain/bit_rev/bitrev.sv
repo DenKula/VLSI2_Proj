@@ -83,9 +83,10 @@ module bitrev #(
   // Combinational read address and data with default assignment
   always_comb begin : rd_path_comb
     // default assignments (avoid accidental latches)
+    logic [K-1:0] rev_addr; 
     data_d = '0;
 
-    logic [K-1:0] rev_addr; 
+    
     rev_addr = bit_reverse(rd_cnt);
 
     // Compute bit‑reversed address and fetch word
