@@ -65,53 +65,43 @@ module bitrev #(
   /* verilator lint_on  WAITCONST */
 
   // ==============================================================
-  //  READ PATH – one registered stage (1‑cycle latency)
+  //  READ PATH – combinational data, one‑flop VALID
   // ==============================================================
-  logic [DW-1:0] data_d, data_q;
-  assign data_o = data_q;
 
-  // -------- Bit‑reverse helper ----------------------------------
+  // Bit‑reverse helper
   function automatic [K-1:0] bit_reverse (input logic [K-1:0] x);
-    for (int i = 0; i < K; ++i) begin
+    for (int i = 0; i < K; ++i)
       bit_reverse[i] = x[K-1-i];
-    end
   endfunction
 
-  // -------- Combinational next‑state & SRAM read ----------------
-  always_comb begin : rd_path_comb
-    // Default next‑state
-    logic [K-1:0] rev_addr;
-    rd_cnt_next       = rd_cnt + 1'b1;
-    bank_sel_rd_next  = bank_sel_rd;
-    data_d            = '0;
+  // Read‑side state
+  logic [K-1:0] rd_cnt;
+  logic         bank_sel_rd;
+  logic         valid_q;
 
-    // Wrap
-    if (rd_cnt == K'((1<<K)-1)) begin
-      rd_cnt_next      = '0;
-      bank_sel_rd_next = ~bank_sel_rd;
-    end
+  // Combinational address & data (no data_q stage)
+  logic [K-1:0] rev_addr_c;
+  logic [DW-1:0] data_c;
+  assign rev_addr_c = bit_reverse(rd_cnt);
+  assign data_c     = sram[{bank_sel_rd, rev_addr_c}];
 
-    // Compute bit‑reversed address for *current* counter value
-    
-    rev_addr = bit_reverse(rd_cnt);
+  // Output ports
+  assign data_o  = data_c;
+  assign valid_o = valid_q;
 
-    // Fetch current sample (output appears next cycle)
-    data_d = sram[{bank_sel_rd, rev_addr}];
-  end
-
-  // -------- Sequential update -----------------------------------
-  always_ff @(posedge clk_i or negedge rst_ni) begin : rd_path_seq
+  // Sequential counter / bank toggle / VALID flag
+  always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
       rd_cnt      <= '0;
-      bank_sel_rd <= 1'b0;              // same bank as writer at reset
-      data_q      <= '0;
-      valid_o     <= 1'b0;
-    end else if (ready_i || ~valid_o) begin
-      rd_cnt      <= rd_cnt_next;
-      bank_sel_rd <= bank_sel_rd_next;
-      data_q      <= data_d;
-      valid_o     <= 1'b1;
+      bank_sel_rd <= 1'b1;          // opposite of writer at reset
+      valid_q     <= 1'b0;
+    end
+    else if (ready_i || ~valid_q) begin
+      // Advance consumer
+      rd_cnt  <= (rd_cnt == K'((1<<K)-1)) ? '0       : rd_cnt + 1'b1;
+      bank_sel_rd <= (rd_cnt == K'((1<<K)-1)) ? ~bank_sel_rd : bank_sel_rd;
+      valid_q <= 1'b1;              // asserted after first fetch
     end
   end
 
-endmodule
+  endmodule
