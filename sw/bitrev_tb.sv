@@ -81,7 +81,7 @@ module bitrev_tb;
     for (int unsigned i = 0; i < N; i++) begin
       ready_i = 1'b1;            // request data
       wait (valid_o);             // wait until word valid
-      @(posedge clk_i);           // sample on clock edge
+      //@(posedge clk_i);           // sample on clock edge
       ready_i = 1'b0;
       if (data_o[K-1:0] !== reverse_bits_k(i[K-1:0])) begin
         $display("Mismatch @%0d : got %0d, exp %0d",
