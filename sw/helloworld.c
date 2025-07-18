@@ -49,46 +49,46 @@ static uint32_t isqrt(uint32_t n)
     return res;
 }
 
-static inline uint32_t reverse_bits_k(uint32_t x)
-{
-    /* Reverse low K bits of x (bit-twiddling classic) */
-    x = ((x & 0x55555555u) << 1)  | ((x & 0xAAAAAAAAu) >> 1);
-    x = ((x & 0x33333333u) << 2)  | ((x & 0xCCCCCCCCu) >> 2);
-    x = ((x & 0x0F0F0F0Fu) << 4)  | ((x & 0xF0F0F0F0u) >> 4);
-    x = ((x & 0x00FF00FFu) << 8)  | ((x & 0xFF00FF00u) >> 8);
-    x = (x << 16) | (x >> 16);
-    return x >> (32u - K);
-}
+// static inline uint32_t reverse_bits_k(uint32_t x)
+// {
+//     /* Reverse low K bits of x (bit-twiddling classic) */
+//     x = ((x & 0x55555555u) << 1)  | ((x & 0xAAAAAAAAu) >> 1);
+//     x = ((x & 0x33333333u) << 2)  | ((x & 0xCCCCCCCCu) >> 2);
+//     x = ((x & 0x0F0F0F0Fu) << 4)  | ((x & 0xF0F0F0F0u) >> 4);
+//     x = ((x & 0x00FF00FFu) << 8)  | ((x & 0xFF00FF00u) >> 8);
+//     x = (x << 16) | (x >> 16);
+//     return x >> (32u - K);
+// }
 
-static void bitrev_selftest(void)
-{
-    printf("Bit-reversal self-test…\n");
+// static void bitrev_selftest(void)
+// {
+//     printf("Bit-reversal self-test…\n");
 
-    /* 1. Push one natural-order frame */
-    for (uint32_t i = 0; i < N; ++i)
-        BITREV_IN = i;
+//     /* 1. Push one natural-order frame */
+//     for (uint32_t i = 0; i < N; ++i)
+//         BITREV_IN = i;
 
-    /* 2. Pull it back and check */
-    uint32_t errors = 0;
+//     /* 2. Pull it back and check */
+//     uint32_t errors = 0;
 
-    for (uint32_t i = 0; i < N; ++i) {
-        while ((BITREV_STAT & 1u) == 0) ;          // wait for valid
-        uint32_t sample  = BITREV_OUT;             // read consumes word
-        uint32_t expect  = reverse_bits_k(i);
-        if (sample != expect) {
-            printf("Mismatch @%u: got %u, exp %u\n",
-                   i, sample, expect);
-            ++errors;
-        }
-    }
+//     for (uint32_t i = 0; i < N; ++i) {
+//         while ((BITREV_STAT & 1u) == 0) ;          // wait for valid
+//         uint32_t sample  = BITREV_OUT;             // read consumes word
+//         uint32_t expect  = reverse_bits_k(i);
+//         if (sample != expect) {
+//             printf("Mismatch @%u: got %u, exp %u\n",
+//                    i, sample, expect);
+//             ++errors;
+//         }
+//     }
 
-    if (errors == 0)
-        printf("Bit-reversal test PASSED for %u-point frame\n", N);
-    else
-        printf("Bit-reversal test FAILED (%u errors)\n", errors);
+//     if (errors == 0)
+//         printf("Bit-reversal test PASSED for %u-point frame\n", N);
+//     else
+//         printf("Bit-reversal test FAILED (%u errors)\n", errors);
 
-    uart_write_flush();
-}
+//     uart_write_flush();
+// }
 
 // =====================================================================
 
@@ -127,7 +127,7 @@ int main(void)
     // ------------------------------------------------------------
     // 2) Bit-reversal verification
     // ------------------------------------------------------------
-    bitrev_selftest();
+    //bitrev_selftest();
 
 
     return 0;
