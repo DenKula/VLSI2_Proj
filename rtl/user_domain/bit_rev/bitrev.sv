@@ -45,12 +45,17 @@ module bitrev #(
 
   // Address counters
   logic [K-1:0] wr_cnt;                // write address within bank
+  logic [K-1:0] wr_cnt_next;           // combinational next value
   logic [K-1:0] rd_cnt;                // read  address within bank
 
   // =====================================================================
   //  WRITE PATH – always ready (no back‑pressure towards producer)
   // =====================================================================
-  logic [K-1:0] wr_cnt_next;
+
+  // Combinational increment for clean non‑blocking style
+  always_comb begin
+    wr_cnt_next = wr_cnt + 1'b1;
+  end
 
   always_ff @(posedge clk_i or negedge rst_ni) begin : wr_path
     if (!rst_ni) begin
@@ -60,9 +65,8 @@ module bitrev #(
       // Store incoming sample
       sram[{bank_sel_wr, wr_cnt}] <= data_i;
 
-      // Increment address counter
-      wr_cnt_next = wr_cnt + 1'b1;
-      wr_cnt      <= wr_cnt_next;
+      // Update address counter
+      wr_cnt <= wr_cnt_next;
 
       // Toggle bank *after* final address (when counter wraps to 0)
       if (wr_cnt_next == '0) begin
