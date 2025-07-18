@@ -85,10 +85,6 @@ module bitrev #(
 
     // Compute bit‑reversed address and fetch word
     data_d = sram[{bank_sel_rd, bit_reverse(rd_cnt)}];
-
-    logic [K-1:0] rev_addr;
-    rev_addr = bit_reverse(rd_cnt);
-    data_d = sram[{bank_sel_rd, rev_addr}];
   end
 
   // Sequential part with explicit default (hold‑state) branch
