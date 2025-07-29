@@ -56,7 +56,7 @@ module bitrev_tb;
   int output_end_cycle    = -1;
 
   always @(posedge clk_i)
-    cycle_count++;
+    cycle_count <= cycle_count +1;
 
   // ------------------------------------------------------------------
   // Main stimulus
