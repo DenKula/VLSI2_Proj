@@ -1,18 +1,31 @@
 # synth_bitrev.ys
-# Read your Verilog
+
+# Read the Verilog source
 read_verilog rtl/user_domain/bit_rev/bitrev.sv
 
-# Set the top‑level module
+# Set top-level module
 hierarchy -top bitrev
 
-# Run a generic (FPGA‑style) synth
-proc; opt; fsm; opt; memory; opt; flatten; opt;
+# Optional: remove or simplify problematic memory
+# Avoid visualizing SRAM as individual signals
+# You can skip this if not needed for visualization:
+# blackbox sram   ;# <-- only if SRAM is a module, not a variable
 
-# Generate a nice block‑level SVG
+# Do basic preparation
+prep -top bitrev
+
+# OPTIONAL: generate pre-synthesis schematic excluding sram signal
+# You can use 'select -list' to show only the datapath parts if needed
+select -clear
+select -add t:bitrev
+select -del %sram
+
+# Generate SVG (not dot, avoids Graphviz issue)
 show \
   -format svg \
   -prefix bitrev \
   -color \
   -viewer none
 
-# (This will produce bitrev.svg in the cwd)
+# Now run synthesis steps
+proc; opt; fsm; opt; memory; opt; flatten; opt;
