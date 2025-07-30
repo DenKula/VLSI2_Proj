@@ -1,20 +1,13 @@
-# Read your RTL
 read_verilog rtl/user_domain/bit_rev/bitrev.sv
-
-# Top module setup
 prep -top bitrev
 
-# Optional: write to JSON if needed for other tools
-# write_json bitrev.json
-
-# Clean current selection
+# Avoid visualizing huge signal arrays
 select -clear
+select -add t:bitrev
+select -del n:sram[*]
 
-# Select everything in the top module
-select -add bitrev
+# If needed, exclude all signals matching sram*
+select -del n:sram*
 
-# Deselect the huge memory to avoid DOT graph overflow
-select -del *sram*
-
-# Generate graph (will output bitrev.dot and launch xdot or GTKWave depending on config)
+# Generate the graph (dot + svg)
 show -width -format dot -prefix bitrev
