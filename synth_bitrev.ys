@@ -1,15 +1,23 @@
-# Load RTL
 read_verilog rtl/user_domain/bit_rev/bitrev.sv
 
-# Prepare design
+# Prevent memory from becoming individual registers
 memory -nomap
+
+# Prepare the top module
 prep -top bitrev
 
-# Restrict visualization to avoid massive .dot labels from SRAM
+# Lower always blocks into logic
+proc
+
+# Clear selection, then add just the top module
 select -clear
 select -add t:bitrev
+
+# Hide large arrays and memory nets
 select -del n:*sram*
+select -del n:*[*
+select -del n:*data*
+select -del n:*q*
 
-
-# Generate a safe, viewable graph
+# Show diagram without flattened sram
 show -width -format dot -prefix bitrev
