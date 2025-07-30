@@ -1,23 +1,26 @@
+# Load the design
 read_verilog rtl/user_domain/bit_rev/bitrev.sv
 
-# Prevent memory from becoming individual registers
+# Keep inferred memories as abstract cells (not flattened into registers)
 memory -nomap
 
-# Prepare the top module
+# Prepare for synthesis
 prep -top bitrev
 
-# Lower always blocks into logic
+# Compile behavioral processes
 proc
 
-# Clear selection, then add just the top module
+# Clear previous selection
 select -clear
+
+# Select only the top module
 select -add t:bitrev
 
-# Hide large arrays and memory nets
-select -del n:*sram*
-select -del n:*[*
-select -del n:*data*
-select -del n:*q*
+# Optionally, remove overly wide buses from display (flattened logic)
+# We now *keep* sram_a and sram_b, so don't exclude them
+select -del n:*[1024]    # optional: removes any wide nets if causing clutter
+select -del n:*data_i*   # optional
+select -del n:*data_o*   # optional
 
-# Show diagram without flattened sram
+# Show final diagram
 show -width -format dot -prefix bitrev
