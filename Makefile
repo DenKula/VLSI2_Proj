@@ -172,3 +172,8 @@ clean:
 	$(MAKE) or_clean
 
 .PHONY: clean
+
+.PHONY: yosys-show
+yosys-show: synth_bitrev.ys rtl/user_domain/bit_rev/bitrev.sv
+	$(YOSYS) -q -s synth_bitrev.ys
+	@echo "➡️  Generated block‑diagram: bitrev.svg"

@@ -1,0 +1,18 @@
+# synth_bitrev.ys
+# Read your Verilog
+read_verilog rtl/user_domain/bit_rev/bitrev.sv
+
+# Set the top‑level module
+hierarchy -top bitrev
+
+# Run a generic (FPGA‑style) synth
+proc; opt; fsm; opt; memory; opt; flatten; opt;
+
+# Generate a nice block‑level SVG
+show \
+  -format svg \
+  -prefix bitrev \
+  -color \
+  -viewer none
+
+# (This will produce bitrev.svg in the cwd)
