@@ -1,31 +1,20 @@
-# synth_bitrev.ys
-
-# Read the Verilog source
+# Read your RTL
 read_verilog rtl/user_domain/bit_rev/bitrev.sv
 
-# Set top-level module
-hierarchy -top bitrev
-
-# Optional: remove or simplify problematic memory
-# Avoid visualizing SRAM as individual signals
-# You can skip this if not needed for visualization:
-# blackbox sram   ;# <-- only if SRAM is a module, not a variable
-
-# Do basic preparation
+# Top module setup
 prep -top bitrev
 
-# OPTIONAL: generate pre-synthesis schematic excluding sram signal
-# You can use 'select -list' to show only the datapath parts if needed
+# Optional: write to JSON if needed for other tools
+# write_json bitrev.json
+
+# Clean current selection
 select -clear
-select -add t:bitrev
-select -del %sram
 
-# Generate SVG (not dot, avoids Graphviz issue)
-show \
-  -format svg \
-  -prefix bitrev \
-  -color \
-  -viewer none
+# Select everything in the top module
+select -add bitrev
 
-# Now run synthesis steps
-proc; opt; fsm; opt; memory; opt; flatten; opt;
+# Deselect the huge memory to avoid DOT graph overflow
+select -del *sram*
+
+# Generate graph (will output bitrev.dot and launch xdot or GTKWave depending on config)
+show -width -format dot -prefix bitrev
