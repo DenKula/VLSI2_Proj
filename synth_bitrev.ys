@@ -1,13 +1,14 @@
+# Load RTL
 read_verilog rtl/user_domain/bit_rev/bitrev.sv
+
+# Prepare design
 prep -top bitrev
 
-# Avoid visualizing huge signal arrays
+# Restrict visualization to avoid massive .dot labels from SRAM
 select -clear
 select -add t:bitrev
-select -del n:sram[*]
+select -del n:*sram*
+select -del n:*[*
 
-# If needed, exclude all signals matching sram*
-select -del n:sram*
-
-# Generate the graph (dot + svg)
+# Generate a safe, viewable graph
 show -width -format dot -prefix bitrev
