@@ -138,7 +138,7 @@ module user_domain import user_pkg::*; import croc_pkg::*; #(
 
   bitrev_subordinate #(
     .ObiCfg      ( SbrObiCfg     ),
-    .K  ( BITREV_K  ),   // e.g. 10 for 1024-point FFT
+    .K  ( BITREV_K  ),   // e.g. 8 for 1024-point FFT
     .DW ( BITREV_DW )    // data width (normally 32)
   ) i_user_bitrev (
     .clk_i,
