@@ -26,7 +26,7 @@ package user_pkg;
   localparam bit [31:0] UserRomAddrOffset   = croc_pkg::UserBaseAddr; // 32'h2000_0000;
   localparam bit [31:0] UserRomAddrRange    = 32'h0000_1000;          // every subordinate has at least 4KB
 
-  localparam int unsigned BITREV_K  = 7;   // log2(FFT length) → 1024
+  localparam int unsigned BITREV_K  = 6;   // log2(FFT length) → 1024
   localparam int unsigned BITREV_DW = 32;   // data-word width
   // **NEW** FFT ─ next 4 KiB at 0x2000_1000
   localparam bit [31:0] UserBitrevAddrOffset = UserRomAddrOffset + UserRomAddrRange; // 0x2000_1000

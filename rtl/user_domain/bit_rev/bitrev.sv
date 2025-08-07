@@ -1,5 +1,5 @@
 module bitrev #(
-  parameter integer K  = 7,   // log₂(N)
+  parameter integer K  = 6,   // log₂(N)
   parameter integer DW = 32    // data width
 )(
   input  wire                 clk_i,

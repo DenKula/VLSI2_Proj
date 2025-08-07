@@ -11,7 +11,7 @@ module bitrev_subordinate
   import croc_pkg::*;
   #(
     parameter obi_pkg::obi_cfg_t ObiCfg = obi_pkg::ObiDefaultConfig,
-    parameter int unsigned       K      = 7,
+    parameter int unsigned       K      = 6,
     parameter int unsigned       DW     = 32
   ) (
     input  logic         clk_i,
