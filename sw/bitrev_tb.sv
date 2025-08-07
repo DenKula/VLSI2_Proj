@@ -4,7 +4,7 @@ module bitrev_tb;
 
   // ------------------------------------------------------------------
   // Parameters (must match DUT generics)
-  localparam int unsigned K  = 10;
+  localparam int unsigned K  = 8;
   localparam int unsigned N  = 1 << K;
   localparam int unsigned DW = 32;
 
